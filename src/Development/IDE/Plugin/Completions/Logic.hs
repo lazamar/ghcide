@@ -374,9 +374,28 @@ toggleSnippets ClientCapabilities { _textDocument } (WithSnippets with) x
 getCompletions :: IdeOptions -> CachedCompletions -> ParsedModule -> VFS.PosPrefixInfo -> ClientCapabilities -> WithSnippets -> IO [CompletionItem]
 getCompletions ideOpts CC { allModNamesAsNS, unqualCompls, qualCompls, importableModules }
                pm prefixInfo caps withSnippets = do
-  let VFS.PosPrefixInfo { VFS.fullLine, VFS.prefixModule, VFS.prefixText } = prefixInfo
-      enteredQual = if T.null prefixModule then "" else prefixModule <> "."
-      fullPrefix  = enteredQual <> prefixText
+  let VFS.PosPrefixInfo { VFS.fullLine, VFS.prefixModule, VFS.prefixText, VFS.cursorPos } = prefixInfo
+      maybeIndex ix = T.take 1 . T.drop ix
+
+      typedDot = "." == maybeIndex (_character cursorPos) fullLine
+
+      qualifiedBit
+        | T.null prefixModule = ""
+        | otherwise           = prefixModule <> "."
+
+      {- Items are only added to prefix module after the first letter.
+             "Control"             -> CC { prefixModule = ""       , prefixText = "Control"    }
+             "Control."            -> CC { prefixModule = ""       , prefixText = "Control"    }
+             "Control.C"           -> CC { prefixModule = "Control", prefixText = "C"          }
+             "Control.Concurrent"  -> CC { prefixModule = "Control", prefixText = "Concurrent" }
+             "Control.Concurrent." -> CC { prefixModule = "Control", prefixText = "Concurrent" }
+      -}
+      enteredQual
+        | typedDot  = qualifiedBit <> prefixText <> "."
+        | otherwise = qualifiedBit
+
+      fullPrefix = qualifiedBit <> prefixText
+
 
       {- correct the position by moving 'foo :: Int -> String ->    '
                                                                     ^

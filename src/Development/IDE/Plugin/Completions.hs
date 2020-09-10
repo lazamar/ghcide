@@ -153,8 +153,6 @@ getCompletionsLSP lsp ide
             let !position' = fromCurrentPosition mapping position
             pfix <- maybe (return Nothing) (flip VFS.getCompletionPrefix cnts) position'
             case (pfix, completionContext) of
-              (Just (VFS.PosPrefixInfo _ "" _ _), Just CompletionContext { _triggerCharacter = Just "."})
-                -> return (Completions $ List [])
               (Just pfix', _) -> do
                   -- TODO pass the real capabilities here (or remove the logic for snippets)
                 let fakeClientCapabilities = ClientCapabilities Nothing Nothing Nothing Nothing
