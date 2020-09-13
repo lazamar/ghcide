@@ -2529,6 +2529,14 @@ nonLocalCompletionTests =
       ["{-# OPTIONS_GHC -Wunused-binds #-}", "module A () where", "f = Prelude.hea"]
       (Position 2 15)
       [ ("head", CiFunction, True, True)
+      ],
+    completionTest
+      "import"
+      [ "module A where"
+      , "import Control."
+      ]
+      (Position 2 16)
+      [ ("Control.Applicative", CiModule, False, False)
       ]
   ]
 
